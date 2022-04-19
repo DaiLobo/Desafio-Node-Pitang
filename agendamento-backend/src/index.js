@@ -1,6 +1,6 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import crypto from "crypto";
+// import crypto from "crypto";
 
 import ScheduleRouter from "./routes/ScheduleRouter.js"
 
@@ -13,6 +13,22 @@ const app = express();
 
 app.use(express.json());
 app.use("/api", ScheduleRouter);
+
+app.use((request, response, next) => {
+  const error = new Error("Schedule not found");
+  error.status = 400
+  next(error);
+})
+
+app.use((error, request, response, next) => {
+  response.status(error.status || 500);
+  return response.send({
+      erro: {
+          message: error.message
+      }
+  });
+});
+
 
 // const schedule = [];
 

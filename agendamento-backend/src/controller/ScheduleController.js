@@ -12,13 +12,15 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
     }
 
     getOne(request, response) {
-        try {
-            const id = request.params.id;
-            const index = schedule.findIndex(element => element.id === id)
+        const id = request.params.id;
+        const index = schedule.findIndex(element => element.id === id)
+        console.log(index)
+
+        if (index !== -1){
             return response.json(schedule[index])
-        } catch (error) {
-            return response.status(404).send({message: "Schedule not found"});
         }
+
+        return response.status(400).send({message: "Schedule not found"}); 
     }
 
     store (request, response) {
@@ -43,43 +45,43 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
             return response.json(schedule);
             
         } catch (error) {
-            return response.status(400).send({error: error});
-        }
-    }
-
-    remove (request, response) {
-        try {
-            const id = request.params.id;
-            const index = schedule.findIndex(element => element.id === id);
-            schedule.splice(index, 1);
-
-            return response.json({message: "Agendamento cancelado"})
-        } catch {
-            return response.status(400).send({error: error})
+            return response.status(400).send({message: "Fail to store entity: Schedule"});
         }
     }
 
     update (request, response) {
-        try {
-            const id = request.params.id;
-            const {
-                name,
-                birthDate,
-                schedulingDate,
-                schedulingTime,
-                attended,
-            } = request.body;
+        const id = request.params.id;
+        const {
+            name,
+            birthDate,
+            schedulingDate,
+            schedulingTime,
+            attended,
+        } = request.body;
 
-            const index = schedule.findIndex(element => element.id === id);
-            console.log(index)
+        const index = schedule.findIndex(element => element.id === id);
+        console.log(index)
 
+        if (index !== -1) { 
             schedule[index] = {id, name, birthDate, schedulingDate, schedulingTime, attended};
             
             return response.json(schedule[index]);
-        } catch (error){
-            return response.status(404).send({message: "Schedule not found"});
-
         }
+        return response.status(404).send({message: "Schedule not found"});
+
+    }
+
+    remove (request, response) {
+        
+        const id = request.params.id;
+        const index = schedule.findIndex(element => element.id === id);
+
+        if (index !== -1) {
+            schedule.splice(index, 1);
+
+            return response.json({message: "Agendamento cancelado"})
+        }
+        return response.status(400).send({error: error})
     }
 }
 
