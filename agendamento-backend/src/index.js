@@ -1,5 +1,6 @@
 import express from 'express';
 import morgan from "morgan";
+import cors from "cors";
 import dotenv from 'dotenv';
 // import crypto from "crypto";
 
@@ -13,8 +14,13 @@ const PORT = process.env.PORT;
 const app = express();
 
 app.use(express.json());
+app.use(cors());
 app.use(morgan("dev"));
 app.use("/api", ScheduleRouter);
+
+app.get('/', (req, res) => {
+  res.send({message: "Welcome to the vaccine scheduling portal"})
+})
 
 app.use((request, response, next) => {
   const error = new Error("Schedule not found");

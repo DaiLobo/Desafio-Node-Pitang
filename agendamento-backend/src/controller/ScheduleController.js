@@ -1,9 +1,22 @@
 import crypto from "crypto";
+import dayjs from "dayjs";
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const schedule = [];
+
+const date = [];
+const time = [];
+
+
+function scheduleSlots(schedulingDate, schedulingTime) {
+    console.log("chegando aqui")
+   
+    date.push({date: schedulingDate});
+    time.push({time: schedulingTime});
+    
+}
 
 class ScheduleController { //exportando as seguintes funções, que são as 5 do CRUD:
     
@@ -20,7 +33,7 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
             return response.json(schedule[index])
         }
 
-        return response.status(400).send({message: "Schedule not found"}); 
+        return response.status(404).send({message: "Schedule not found"}); 
     }
 
     store (request, response) {
@@ -35,17 +48,32 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
                 attended,
             } = request.body;
 
-            schedule.push({id,
-                name,
-                birthDate,
-                schedulingDate,
-                schedulingTime,
-                attended});
+            scheduleSlots(schedulingDate, schedulingTime)
 
-            return response.json(schedule);
-            
+                const chosenTime = time.filter(element => element.time === schedulingTime);
+                // console.log(chosenTime)
+                const chosenDate = date.filter(element => element.date === schedulingDate)
+          
+
+            if (chosenDate.length <= 20 && chosenTime.length <= 2) {
+                // console.log(date)
+                // console.log(time)
+                schedule.push({id,
+                    name,
+                    birthDate,
+                    schedulingDate: dayjs(schedulingDate).format('YYYY-MM-DD'),
+                    schedulingTime,
+                    attended});
+    
+                return response.json(schedule);
+            } else if (chosenDate.length > 20){
+                return response.status(401).send({ message: "Limit 20 patients per day" })
+            } else if (chosenTime.length > 2){
+                return response.status(401).send({ message: "Limit of 2 patients per hour" })
+            }
+      
         } catch (error) {
-            return response.status(400).send({message: "Fail to store entity: Schedule"});
+            return response.status(400).send({message: "Fail to store entity Schedule"});
         }
     }
 
@@ -79,9 +107,9 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
         if (index !== -1) {
             schedule.splice(index, 1);
 
-            return response.json({message: "Agendamento cancelado"})
+            return response.json({message: "Agendamento cancelado"});
         }
-        return response.status(400).send({error: error})
+        return response.status(404).send({message: "Schedule not found"});
     }
 }
 
