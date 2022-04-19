@@ -1,3 +1,4 @@
+import crypto from "crypto";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -7,61 +8,78 @@ const schedule = [];
 class ScheduleController { //exportando as seguintes funções, que são as 5 do CRUD:
     
     index (request, response) {
-        app.get('/', (request, response) => {
-            response.json({message: "Tudo ok por aqui!", dados: schedule});
-          })
+        return response.json(schedule);
+    }
+
+    getOne(request, response) {
+        try {
+            const id = request.params.id;
+            const index = schedule.findIndex(element => element.id === id)
+            return response.json(schedule[index])
+        } catch (error) {
+            return response.status(404).send({message: "Schedule not found"});
+        }
     }
 
     store (request, response) {
-        app.post("/schedule", (request, response) => {
-            console.log("Agendamento realizado");
-            //salvando os dados em memória
-            schedule.push({
-              name: request.body,
-              birthDate: request.body,
-              schedulingDate: request.body,
-              schedulingTime: request.body,
-              attended: request.body,
-            });
-            response.json({message: "Tudo certo", dados: schedule})
-          });
-        response.send(schedule);
+        try {
+            const id = crypto.randomUUID();
+  
+            const {
+                name,
+                birthDate,
+                schedulingDate,
+                schedulingTime,
+                attended,
+            } = request.body;
+
+            schedule.push({id,
+                name,
+                birthDate,
+                schedulingDate,
+                schedulingTime,
+                attended});
+
+            return response.json(schedule);
+            
+        } catch (error) {
+            return response.status(400).send({error: error});
+        }
     }
 
     remove (request, response) {
-        const {id} = request.params;
-        //const schedule = await ScheduleModel.findById(id);
-    
-        if (schedule){
-            schedule.remove();
-            return response.send({message: "schedule deleted"});
+        try {
+            const id = request.params.id;
+            const index = schedule.findIndex(element => element.id === id);
+            schedule.splice(index, 1);
+
+            return response.json({message: "Agendamento cancelado"})
+        } catch {
+            return response.status(400).send({error: error})
         }
-        
-        response.status(404).send({message: "schedule not found"});
     }
 
     update (request, response) {
-        const {id} = request.params;
-        //validação nos campos
-        //const {nome, email, password, phones} = request.body;
+        try {
+            const id = request.params.id;
+            const {
+                name,
+                birthDate,
+                schedulingDate,
+                schedulingTime,
+                attended,
+            } = request.body;
 
-        // const schedule = await ScheduleModel.findByIdAndUpdate(
-        //     id,
-        //     {
-        //     name,
-        //     birthDate,
-        //     schedulingDate,
-        //     schedulingTime,
-        //     attended,
-        //     }
-        // );
-        
-        if(!schedule){
-            return response.status(404).send({message: "schedule not found"});
+            const index = schedule.findIndex(element => element.id === id);
+            console.log(index)
+
+            schedule[index] = {id, name, birthDate, schedulingDate, schedulingTime, attended};
+            
+            return response.json(schedule[index]);
+        } catch (error){
+            return response.status(404).send({message: "Schedule not found"});
+
         }
-
-        response.send({ schedule });
-    
     }
 }
 
