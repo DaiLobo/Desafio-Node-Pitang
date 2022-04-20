@@ -10,6 +10,50 @@ const date = [];
 const day = [];
 //const time = [];
 
+function currentDates (chosenDate) { //data escolhida
+
+    //Dados sobre o momento atual
+    const currentDay = new Date().getDate();
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const currentHour = new Date().getHours();
+   
+    const dayHour = chosenDate[chosenDate.length-1].split(" "); //separa o dia da hora
+    const chosenHour = dayHour[1].split(":"); //pegando a hora sem os minutos
+
+    chosenDate.pop(); //retira a última posição
+    chosenDate.push(dayHour[0]) //adicionando somente o dia na última posição
+    console.log(Number(chosenDate[1]))
+
+    if ((Number(chosenDate[0]) < Number(currentYear)) ||
+        (Number(chosenDate[1]) < Number(currentMonth)+1) ||
+        chosenDate[2] < currentDay){
+        
+            console.log("não pode")
+            return false;
+
+    } else {
+        console.log("entra aqui?")
+       
+        if (Number(chosenHour[0]) <= Number(currentHour) && 
+            ((Number(chosenDate[1]) <= Number(currentMonth)+1) &&
+            chosenDate[2] <= currentDay)){ //só pode hora a partir da hora atual
+            
+                console.log("HORA INVALIDA")
+            return false;
+        }
+    }
+
+
+    console.log("dia: " + currentDay)
+    console.log("hora: " + currentHour)
+    console.log("mes: " + currentMonth)
+    console.log("ano: " + currentYear)
+    console.log("hora q escolhi: " + chosenHour[0])
+
+    return true;
+}
+
 
 function scheduleSlots(schedulingDateTime) {
     console.log("chegando aqui")
@@ -19,31 +63,13 @@ function scheduleSlots(schedulingDateTime) {
         return false;
     }
 
-   
-    const currentDay = new Date().getDate();
-    const currentMonth = new Date().getMonth();
-    const currentYear = new Date().getFullYear();
-    const currentHour = new Date().getHours();
-
-    const currentDate = schedulingDateTime.split("/");
-    const ultimaposicao = currentDate[currentDate.length-1].split(" ");
-    currentDate.pop();
-    currentDate.push(ultimaposicao[0])
-    console.log(Number(currentDate[1]))
-
-    if ((Number(currentDate[0]) < Number(currentYear)) ||
-        (Number(currentDate[1]) < Number(currentMonth)+1) ||
-        currentDate[2] < currentDay){
-        
-            console.log("não pode")
-
+    const chosenDate = schedulingDateTime.split("/");
+    
+    if(!currentDates(chosenDate)) {
+        console.log("DATA ULTRAPASSADAAAAAAAAAA, escolha outra")
+        return response.status(400).send({message: "Fail to store entity Schedule"});
     }
 
-    console.log("dia: " + currentDay)
-    console.log("hora: " + currentHour)
-    console.log("mes: " + currentMonth)
-    console.log("ano: " + currentYear)
-    
     date.push({dateTime: schedulingDateTime});
     //time.push({time: schedulingTime});
     console.log("Date:")
