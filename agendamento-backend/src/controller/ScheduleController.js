@@ -14,18 +14,43 @@ const day = [];
 function scheduleSlots(schedulingDateTime) {
     console.log("chegando aqui")
 
-   if (date.filter(element => element.dateTime === schedulingDateTime).length >= 2){
-       return false;
-   }
-   if (day.filter(element => element.day === (schedulingDateTime.split(" ")[0])).length >= 20){
-       return false;
-   }
+    if (date.filter(element => element.dateTime === schedulingDateTime).length >= 2 ||
+        day.filter(element => element.day === (schedulingDateTime.split(" ")[0])).length >= 20){
+        return false;
+    }
+
+   
+    const currentDay = new Date().getDate();
+    const currentMonth = new Date().getMonth();
+    const currentYear = new Date().getFullYear();
+    const currentHour = new Date().getHours();
+
+    const currentDate = schedulingDateTime.split("/");
+    const ultimaposicao = currentDate[currentDate.length-1].split(" ");
+    currentDate.pop();
+    currentDate.push(ultimaposicao[0])
+    console.log(Number(currentDate[1]))
+
+    if ((Number(currentDate[0]) < Number(currentYear)) ||
+        (Number(currentDate[1]) < Number(currentMonth)+1) ||
+        currentDate[2] < currentDay){
+        
+            console.log("não pode")
+
+    }
+
+    console.log("dia: " + currentDay)
+    console.log("hora: " + currentHour)
+    console.log("mes: " + currentMonth)
+    console.log("ano: " + currentYear)
+    
     date.push({dateTime: schedulingDateTime});
     //time.push({time: schedulingTime});
+    console.log("Date:")
     console.log(date)
 
     day.push({day: schedulingDateTime.split(" ")[0]})
-    console.log('-----------------------------------')
+    console.log('day')
     console.log(day)
     return true;
 
@@ -69,8 +94,10 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
                 const chosenDateTime = date.filter(element => element.dateTime === schedulingDateTime);
                 const limitDay = day.filter(element => element.day === schedulingDateTime.split(" ")[0])
 
+
+                console.log("chosenDateTime:");
                 console.log(chosenDateTime);
-                console.log("separando os limitadores");
+                console.log("limitday");
                 console.log(limitDay);
 
             if (chosenDateTime.length <= 2 && limitDay.length <= 20) {
