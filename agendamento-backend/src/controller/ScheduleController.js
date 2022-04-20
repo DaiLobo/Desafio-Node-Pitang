@@ -7,15 +7,28 @@ dotenv.config();
 const schedule = [];
 
 const date = [];
-const time = [];
+const day = [];
+//const time = [];
 
 
-function scheduleSlots(schedulingDate, schedulingTime) {
+function scheduleSlots(schedulingDateTime) {
     console.log("chegando aqui")
-   
-    date.push({date: schedulingDate});
-    time.push({time: schedulingTime});
-    
+
+   if (date.filter(element => element.dateTime === schedulingDateTime).length >= 2){
+       return false;
+   }
+   if (day.filter(element => element.day === (schedulingDateTime.split(" ")[0])).length >= 20){
+       return false;
+   }
+    date.push({dateTime: schedulingDateTime});
+    //time.push({time: schedulingTime});
+    console.log(date)
+
+    day.push({day: schedulingDateTime.split(" ")[0]})
+    console.log('-----------------------------------')
+    console.log(day)
+    return true;
+
 }
 
 class ScheduleController { //exportando as seguintes funções, que são as 5 do CRUD:
@@ -43,34 +56,41 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
             const {
                 name,
                 birthDate,
-                schedulingDate,
-                schedulingTime,
+                schedulingDateTime,
+                //schedulingTime,
                 attended,
             } = request.body;
 
-            scheduleSlots(schedulingDate, schedulingTime)
-
-                const chosenTime = time.filter(element => element.time === schedulingTime);
+            if (!(scheduleSlots(schedulingDateTime))){
+                return response.status(400).send({message: "Fail to store entity Schedule"});;
+            }
+                //const chosenTime = time.filter(element => element.time === schedulingTime);
                 // console.log(chosenTime)
-                const chosenDate = date.filter(element => element.date === schedulingDate)
-          
+                const chosenDateTime = date.filter(element => element.dateTime === schedulingDateTime);
+                const limitDay = day.filter(element => element.day === schedulingDateTime.split(" ")[0])
 
-            if (chosenDate.length <= 20 && chosenTime.length <= 2) {
+                console.log(chosenDateTime);
+                console.log("separando os limitadores");
+                console.log(limitDay);
+
+            if (chosenDateTime.length <= 2 && limitDay.length <= 20) {
+
                 // console.log(date)
                 // console.log(time)
                 schedule.push({id,
                     name,
-                    birthDate,
-                    schedulingDate: dayjs(schedulingDate).format('YYYY-MM-DD'),
-                    schedulingTime,
-                    attended});
+                    birthDate: dayjs(birthDate).format('YYYY-MM-DD'),
+                    schedulingDateTime: dayjs(schedulingDateTime).format('YYYY/M/D HH:mm'),
+                    //schedulingTime,
+                    attended
+                });
     
                 return response.json(schedule);
-            } else if (chosenDate.length > 20){
-                return response.status(401).send({ message: "Limit 20 patients per day" })
-            } else if (chosenTime.length > 2){
+            } else if (chosenDateTime.length > 2){
                 return response.status(401).send({ message: "Limit of 2 patients per hour" })
-            }
+            } else if (limitDay.length > 20){
+               return response.status(401).send({ message: "Limit 20 patients per day"})
+        }
       
         } catch (error) {
             return response.status(400).send({message: "Fail to store entity Schedule"});
@@ -82,8 +102,8 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
         const {
             name,
             birthDate,
-            schedulingDate,
-            schedulingTime,
+            schedulingDateTime,
+            //schedulingTime,
             attended,
         } = request.body;
 
@@ -91,7 +111,7 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
         console.log(index)
 
         if (index !== -1) { 
-            schedule[index] = {id, name, birthDate, schedulingDate, schedulingTime, attended};
+            schedule[index] = {id, name, birthDate, schedulingDateTime, attended};
             
             return response.json(schedule[index]);
         }
