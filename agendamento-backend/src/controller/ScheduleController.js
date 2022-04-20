@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import dayjs from "dayjs";
+import * as yup from "yup";
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -82,6 +83,15 @@ function scheduleSlots(schedulingDateTime) {
 
 }
 
+//Validação
+
+const schema = yup.object().shape({
+    name: yup.string().required(),
+    birthDate: yup.date().required(),
+    schedulingDateTime: yup.date().required(),
+    attended: yup.bool().default(false),
+})
+
 class ScheduleController { //exportando as seguintes funções, que são as 5 do CRUD:
     
     index (request, response) {
@@ -112,6 +122,17 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
                 attended,
             } = request.body;
 
+            const validation = schema.validate({
+                name,
+                birthDate,
+                schedulingDateTime,
+                attended
+            });
+
+            if (validation.error) {
+                return response.status(400).json(validation)
+            }
+
             if (!(scheduleSlots(schedulingDateTime))){
                 return response.status(400).send({message: "Fail to store entity Schedule"});;
             }
@@ -135,7 +156,7 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
                     birthDate: dayjs(birthDate).format('YYYY-MM-DD'),
                     schedulingDateTime: dayjs(schedulingDateTime).format('YYYY/M/D HH:mm'),
                     //schedulingTime,
-                    attended
+                    attended: false
                 });
     
                 return response.json(schedule);
