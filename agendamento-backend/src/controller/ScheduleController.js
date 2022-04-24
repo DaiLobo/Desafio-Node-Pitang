@@ -72,7 +72,6 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
     getOne(request, response) {
         const id = request.params.id;
         const index = schedule.findIndex(element => element.id === id)
-        console.log(index)
 
         if (index !== -1){
             return response.json(schedule[index])
@@ -90,13 +89,6 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
             schedulingDateTime,
             attended,
         } = request.body;
-        
-        // const validation = schema.validate({
-        //     name,
-        //     birthDate,
-        //     schedulingDateTime,
-        //     attended
-        // });
         
         try {
 
@@ -124,7 +116,7 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
         }
     }
 
-    update (request, response) {
+    async update (request, response) {
         const id = request.params.id;
         const {
             name,
@@ -133,25 +125,24 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
             attended,
         } = request.body;
 
-        const validation = schema.validate({
-            name,
-            birthDate,
-            schedulingDateTime,
-            attended
-        });
+        try {
 
-        if (validation.error) {
-            return response.status(400).json(validation);
+            const validation = await schema.validate(request.body)
+
+            if (validation.error) {
+                return response.status(400).json(validation);
+            }
+
+            const index = schedule.findIndex(element => element.id === id);
+
+            if (index !== -1) { 
+                schedule[index] = {id, name, birthDate, schedulingDateTime, attended};
+                
+                return response.json(schedule[index]);
+            }
+        } catch (error) {
+            return response.status(404).send({message: "Fail to update schedule"});
         }
-
-        const index = schedule.findIndex(element => element.id === id);
-
-        if (index !== -1) { 
-            schedule[index] = {id, name, birthDate, schedulingDateTime, attended};
-            
-            return response.json(schedule[index]);
-        }
-        return response.status(404).send({message: "Schedule not found"});
 
     }
 
