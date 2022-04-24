@@ -81,23 +81,26 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
         return response.status(404).send({message: "Schedule not found"}); 
     }
 
-    store (request, response) {
+    async store (request, response) {
+        const id = crypto.randomUUID();
+        
+        const {
+            name,
+            birthDate,
+            schedulingDateTime,
+            attended,
+        } = request.body;
+        
+        // const validation = schema.validate({
+        //     name,
+        //     birthDate,
+        //     schedulingDateTime,
+        //     attended
+        // });
+        
         try {
-            const id = crypto.randomUUID();
-  
-            const {
-                name,
-                birthDate,
-                schedulingDateTime,
-                attended,
-            } = request.body;
 
-            const validation = schema.validate({
-                name,
-                birthDate,
-                schedulingDateTime,
-                attended
-            });
+            const validation = await schema.validate(request.body)
 
             if (validation.error) {
                 return response.status(400).json(validation);
