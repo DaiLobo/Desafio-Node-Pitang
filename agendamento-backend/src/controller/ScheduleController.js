@@ -1,22 +1,67 @@
 import crypto from "crypto";
 import dayjs from "dayjs";
+import * as yup from "yup";
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 const schedule = [];
 
-const date = [];
-const time = [];
+function currentDates (chosenDate, chosenHour) { 
 
+    const currentTime = new Date().getTime();
 
-function scheduleSlots(schedulingDate, schedulingTime) {
-    console.log("chegando aqui")
+    if (chosenHour <= currentTime) {
+        return false;
+    }
    
-    date.push({date: schedulingDate});
-    time.push({time: schedulingTime});
-    
+    const currentDate = dayjs(new Date()).format('YYYY/M/D');
+
+    if (Number(chosenDate) <= Number(currentDate)){
+        return false;
+    }
+
+    return true;
 }
+
+
+function scheduleSlots(schedulingDateTime) {
+
+    //twenty schedules per day
+    const chosenDate = dayjs(schedulingDateTime).format('YYYY/M/D');
+    const dateFormated = schedule.map(element => dayjs(element.schedulingDateTime).format('YYYY/M/D'))
+    const limitDay = dateFormated.filter(element => element === chosenDate)
+
+    //two schedules per hour
+    const chosenHour = Date.parse(dayjs(schedulingDateTime).format('YYYY/M/D HH:mm'))
+    const hourFormated = schedule.map(element => Date.parse(element.schedulingDateTime))
+
+    const limitHour = hourFormated.filter(element => {
+        if (element === chosenHour){
+            return element;
+        }
+    })
+    
+    if (limitDay.length >= 20 || limitHour.length >=2){
+        return false;
+    }
+    
+    if(!currentDates(chosenDate, chosenHour)) {
+        return response.status(400).send({message: "Fail to store entity Schedule"});
+    }
+
+    return true;
+
+}
+
+//Validação
+
+const schema = yup.object().shape({
+    name: yup.string().required(),
+    birthDate: yup.date().required(),
+    schedulingDateTime: yup.date().required(),
+    attended: yup.bool().default(false),
+})
 
 class ScheduleController { //exportando as seguintes funções, que são as 5 do CRUD:
     
@@ -27,7 +72,6 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
     getOne(request, response) {
         const id = request.params.id;
         const index = schedule.findIndex(element => element.id === id)
-        console.log(index)
 
         if (index !== -1){
             return response.json(schedule[index])
@@ -36,66 +80,69 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
         return response.status(404).send({message: "Schedule not found"}); 
     }
 
-    store (request, response) {
+    async store (request, response) {
+        const id = crypto.randomUUID();
+        
+        const {
+            name,
+            birthDate,
+            schedulingDateTime,
+            attended,
+        } = request.body;
+        
         try {
-            const id = crypto.randomUUID();
-  
-            const {
-                name,
-                birthDate,
-                schedulingDate,
-                schedulingTime,
-                attended,
-            } = request.body;
 
-            scheduleSlots(schedulingDate, schedulingTime)
+            const validation = await schema.validate(request.body)
 
-                const chosenTime = time.filter(element => element.time === schedulingTime);
-                // console.log(chosenTime)
-                const chosenDate = date.filter(element => element.date === schedulingDate)
-          
-
-            if (chosenDate.length <= 20 && chosenTime.length <= 2) {
-                // console.log(date)
-                // console.log(time)
-                schedule.push({id,
-                    name,
-                    birthDate,
-                    schedulingDate: dayjs(schedulingDate).format('YYYY-MM-DD'),
-                    schedulingTime,
-                    attended});
-    
-                return response.json(schedule);
-            } else if (chosenDate.length > 20){
-                return response.status(401).send({ message: "Limit 20 patients per day" })
-            } else if (chosenTime.length > 2){
-                return response.status(401).send({ message: "Limit of 2 patients per hour" })
+            if (validation.error) {
+                return response.status(400).json(validation);
             }
+
+            if (!(scheduleSlots(schedulingDateTime))){
+                return response.status(400).send({message: "Fail to store entity Schedule: invalid date"});
+            }
+            
+            schedule.push({id,
+                name,
+                birthDate: dayjs(birthDate).format('YYYY/MM/DD'),
+                schedulingDateTime: dayjs(schedulingDateTime).format('YYYY/M/D HH:mm'),
+                attended: false
+            });
+
+            return response.json(schedule);
       
         } catch (error) {
             return response.status(400).send({message: "Fail to store entity Schedule"});
         }
     }
 
-    update (request, response) {
+    async update (request, response) {
         const id = request.params.id;
         const {
             name,
             birthDate,
-            schedulingDate,
-            schedulingTime,
+            schedulingDateTime,
             attended,
         } = request.body;
 
-        const index = schedule.findIndex(element => element.id === id);
-        console.log(index)
+        try {
 
-        if (index !== -1) { 
-            schedule[index] = {id, name, birthDate, schedulingDate, schedulingTime, attended};
-            
-            return response.json(schedule[index]);
+            const validation = await schema.validate(request.body)
+
+            if (validation.error) {
+                return response.status(400).json(validation);
+            }
+
+            const index = schedule.findIndex(element => element.id === id);
+
+            if (index !== -1) { 
+                schedule[index] = {id, name, birthDate, schedulingDateTime, attended};
+                
+                return response.json(schedule[index]);
+            }
+        } catch (error) {
+            return response.status(404).send({message: "Fail to update schedule"});
         }
-        return response.status(404).send({message: "Schedule not found"});
 
     }
 
@@ -107,7 +154,7 @@ class ScheduleController { //exportando as seguintes funções, que são as 5 do
         if (index !== -1) {
             schedule.splice(index, 1);
 
-            return response.json({message: "Agendamento cancelado"});
+            return response.json({message: "Cancelled schedule"});
         }
         return response.status(404).send({message: "Schedule not found"});
     }
