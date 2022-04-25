@@ -1,4 +1,4 @@
-import app from '../index.js';
+import app from '../../index.js';
 import {listDataBase, schedule, Wrongschedule} from "./mocks.js"
 import request from 'supertest';
 
